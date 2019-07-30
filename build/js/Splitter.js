@@ -100,20 +100,7 @@ jQuery(document).ready(function($) {
                                 if (err) {
                                     console.error(err);
                                 } else {
-									console.log("Tried to set splitters txn: ", txn);
-									web3.eth.getTransactionReceipt(txn, function (e, data) {
-										 if (e !== null) {
-											console.log("Could not find a transaction for your id! ID you provided was " + txn);
-										} else {
-											console.log(data);
-											if(data.status == '0x0') {
-												console.log("The contract execution was not successful, check your transaction !");
-											} else {
-												console.log("Execution worked fine!");
-											}
-										}
-									});
-                                    
+									console.log("Tried to set splitters txn: ", txn);                                    
                                     _splitterInit();	
                                 }
                             });
