@@ -1,6 +1,6 @@
  pragma solidity 0.5.8;
  
- import './owned.sol';
+ import './Owned.sol';
  
  /** @title Splitting of Alice' ethereum for the Blockstars course. */
  contract Splitter is Owned {
@@ -12,24 +12,10 @@
     address payable splitter2; //Carols address
     
     /**
-     * In the constructor we set the owner of the contract to be the initial deployer
-     * This could be Alice.
-     * 
-     */
-    constructor() public payable {
-        owner = msg.sender;
-    }
-    
-    /**
-     * This gets the balance of the contract.
-     * This is also at the same time the wallet of the contract owner.
-     * 
-     * @return balance Contract balance as uint
-     */
-    function getBalance() public view returns (uint) {
-         return address(this).balance;
-    }
-    
+     * The constructor is set in Onwed.
+	 */
+	 
+
     /**
      * Sets addresses of Splitter customers
      * 
@@ -125,5 +111,8 @@
            return true;
        }
     
+	/** 
+	 * This function makes the contract payable
+	 */
     function() payable external {}
  }
