@@ -11,6 +11,7 @@
     <title>Splitter</title>
   </head>
   <body>
+  
 
 <div class="container">
 	<div class="card-deck mb-3 text-center">
@@ -19,49 +20,53 @@
 			<h4 class="my-0 font-weight-normal">Contract Balance</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >ETH <span id="balance">?</span> </h1>
+			<h1 class="card-title pricing-card-title" >Wei <span id="balance">?</span> </h1>
 			<small class="text-muted" id="contractttx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
-			<li> If Alice clicks the blue button on the top the contract balance is send to Bob and Carol.
-			<li> If Alice clicks the grey button on the bottom the Ethereum addresses of Bob and Carol are set.
+			<li> This is the contracts overall balance
+			<li> The owner can drain it.
 			</ul>
-			<button type="button" class="btn btn-primary btn-lg btn-block" id="Ispilt">Split it!</button>
-			<button type="button" class="btn btn-secondary btn-lg btn-block" id="Iset" >Set adddresses!</button>
+			<button type="button" class="btn btn-info btn-lg btn-block" id="Idrain">Drain it!</button>
 		  </div>
 		</div>
 		
-		<div class="card mb-4 shadow-sm">
+		<div class="card mb-4 shadow-sm" >
 		  <div class="card-header">
-			<h4 class="my-0 font-weight-normal">Alice</h4>
+			<h4 class="my-0 font-weight-normal">Splitter  Balance</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >ETH <span id="coinbasebalance">?</span> </h1>
-			<small class="text-muted" id="coinbasetx">0x0</small>
+			<h1 class="card-title pricing-card-title" >Wei <span id="localCustomerbalance">?</span> </h1>
+			<small class="text-muted" id="localCustomertx">Local Balance</small>
 			<ul class="list-unstyled mt-3 mb-4">
-			<li> This is the coinbase.
-			<li> This is Alice.
+			<li> This is the local balance available to be split
+			<li> If Alice clicks the blue button on the top the contract balance is send to Bob and Carol.
+			
 			</ul>
-
+			<button type="button" class="btn btn-primary btn-lg btn-block" id="Ispilt">Split it!</button>
 		  </div>
 		</div>
+		
 		
 		<div class="card mb-4 shadow-sm">
 		  <div class="card-header">
 			<h4 class="my-0 font-weight-normal">Bob</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >ETH <span id="splitter1balance">?</span> </h1>
-			<small class="text-muted" id="splitter1tx">0x0</small>
+			<h1 class="card-title pricing-card-title" >Wei <span id="leftCustomerbalance">?</span> </h1>
+			<small class="text-muted" id="leftCustomertx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
 			<li> This is Bob. Bob gets half the ammount of the contract once Alice clicks the button.
+			<li> If Alice clicks the grey button on the bottom the Ethereum addresses of Bob is set.
 			</ul>
-			<label for="splitter1address">Bobs ETH Address</label>
-	<div class="input-group mb-3">
-	  <div class="input-group-prepend">
-		<span class="input-group-text" id="splitter1addresseth">ETH </span>
-	  </div>
-	  <input type="text" class="form-control" id="splitter1address" aria-describedby="splitter1addresseth">
-	</div>
+			
+			<label for="leftCustomeraddress">Bobs ETH Address</label>
+			<div class="input-group mb-3">
+			  <div class="input-group-prepend">
+				<span class="input-group-text" id="leftCustomeraddresseth">ETH </span>
+			  </div>
+			  <input type="text" class="form-control" id="leftCustomeraddress" aria-describedby="leftCustomeraddresseth">
+			</div>
+			<button type="button" class="btn btn-secondary btn-lg btn-block" id="LeftCustomerSetAddress">Set Bobs address</button>
 		  </div>
 		</div>
 		<div class="card mb-4 shadow-sm">
@@ -69,19 +74,21 @@
 			<h4 class="my-0 font-weight-normal">Carol</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >ETH <span id="splitter2balance">?</span> </h1>
-			<small class="text-muted" id="splitter2tx">0x0</small>
+			<h1 class="card-title pricing-card-title" >ETH <span id="rightCustomerbalance">?</span> </h1>
+			<small class="text-muted" id="rightCustomertx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
 			<li> This is Carol. Bob gets half the ammount of the contract once Alice clicks the button.
+			<li> If Alice clicks the grey button on the bottom the Ethereum addresses of Carol is set.
 			</ul>
 			
-			<label for="splitter2address">Carols ETH Address</label>
-	<div class="input-group mb-3">
-	  <div class="input-group-prepend">
-		<span class="input-group-text" id="splitter2addresseth">ETH </span>
-	  </div>
-	  <input type="text" class="form-control" id="splitter2address" aria-describedby="splitter2addresseth">
-	</div>
+			<label for="rightCustomeraddress">Carols ETH Address</label>
+			<div class="input-group mb-3">
+			  <div class="input-group-prepend">
+				<span class="input-group-text" id="rightCustomeraddresseth">ETH </span>
+			  </div>
+			  <input type="text" class="form-control" id="rightCustomeraddress" aria-describedby="rightCustomeraddresseth">
+			</div>
+			<button type="button" class="btn btn-secondary btn-lg btn-block" id="RightCustomerSetAddress">Set Carols address</button>
 						
 			
 		  </div>
