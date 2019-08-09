@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
     <title>Splitter</title>
+	
+	<script src="https://cdn.jsdelivr.net/npm/bluebird@3.5.5/js/browser/bluebird.min.js" type="module"></script>
+
   </head>
   <body>
   
@@ -20,13 +23,12 @@
 			<h4 class="my-0 font-weight-normal">Contract Balance</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >Wei <span id="balance">?</span> </h1>
+			<h1 class="card-title pricing-card-title" >Wei <span id="coinbasebalance">?</span> </h1>
 			<small class="text-muted" id="contractttx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
 			<li> This is the contracts overall balance
-			<li> The owner can drain it.
 			</ul>
-			<button type="button" class="btn btn-info btn-lg btn-block" id="Idrain">Drain it!</button>
+			
 		  </div>
 		</div>
 		
@@ -38,10 +40,20 @@
 			<h1 class="card-title pricing-card-title" >Wei <span id="localCustomerbalance">?</span> </h1>
 			<small class="text-muted" id="localCustomertx">Local Balance</small>
 			<ul class="list-unstyled mt-3 mb-4">
-			<li> This is the local balance available to be split
-			<li> If Alice clicks the blue button on the top the contract balance is send to Bob and Carol.
+			<li> If Alice clicks the blue button sends the provided Wei to the contract
+			<li> the contract maintains the balances for Bob and Carol.
+			
 			
 			</ul>
+			
+			<label for="valueWei">Value to split</label>
+			<div class="input-group mb-3">
+			  <div class="input-group-prepend">
+				<span class="input-group-text" id="valueWeiWei">Wei </span>
+			  </div>
+			  <input type="text" class="form-control" placeholder="0" id="valueWei" aria-describedby="valueWeilabel">
+			</div>
+			
 			<button type="button" class="btn btn-primary btn-lg btn-block" id="Ispilt">Split it!</button>
 		  </div>
 		</div>
@@ -52,21 +64,21 @@
 			<h4 class="my-0 font-weight-normal">Bob</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >Wei <span id="leftCustomerbalance">?</span> </h1>
-			<small class="text-muted" id="leftCustomertx">0x0</small>
+			<h1 class="card-title pricing-card-title" >Wei <span id="firstCustomerbalance">?</span> </h1>
+			<small class="text-muted" id="firstCustomertx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
 			<li> This is Bob. Bob gets half the ammount of the contract once Alice clicks the button.
 			<li> If Alice clicks the grey button on the bottom the Ethereum addresses of Bob is set.
 			</ul>
 			
-			<label for="leftCustomeraddress">Bobs ETH Address</label>
+			<label for="firstCustomeraddress">Bobs ETH Address</label>
 			<div class="input-group mb-3">
 			  <div class="input-group-prepend">
-				<span class="input-group-text" id="leftCustomeraddresseth">ETH </span>
+				<span class="input-group-text" id="firstCustomeraddresseth">ETH </span>
 			  </div>
-			  <input type="text" class="form-control" id="leftCustomeraddress" aria-describedby="leftCustomeraddresseth">
+			  <input type="text" class="form-control" id="firstCustomeraddress" aria-describedby="firstCustomeraddresseth">
 			</div>
-			<button type="button" class="btn btn-secondary btn-lg btn-block" id="LeftCustomerSetAddress">Set Bobs address</button>
+			<button type="button" class="btn btn-secondary btn-lg btn-block" id="firstCustomerSetAddress">Set Bobs address</button>
 		  </div>
 		</div>
 		<div class="card mb-4 shadow-sm">
@@ -74,21 +86,21 @@
 			<h4 class="my-0 font-weight-normal">Carol</h4>
 		  </div>
 		  <div class="card-body">
-			<h1 class="card-title pricing-card-title" >ETH <span id="rightCustomerbalance">?</span> </h1>
-			<small class="text-muted" id="rightCustomertx">0x0</small>
+			<h1 class="card-title pricing-card-title" >Wei <span id="secondCustomerbalance">?</span> </h1>
+			<small class="text-muted" id="secondCustomertx">0x0</small>
 			<ul class="list-unstyled mt-3 mb-4">
 			<li> This is Carol. Bob gets half the ammount of the contract once Alice clicks the button.
 			<li> If Alice clicks the grey button on the bottom the Ethereum addresses of Carol is set.
 			</ul>
 			
-			<label for="rightCustomeraddress">Carols ETH Address</label>
+			<label for="secondCustomeraddress">Carols ETH Address</label>
 			<div class="input-group mb-3">
 			  <div class="input-group-prepend">
-				<span class="input-group-text" id="rightCustomeraddresseth">ETH </span>
+				<span class="input-group-text" id="secondCustomeraddresseth">ETH </span>
 			  </div>
-			  <input type="text" class="form-control" id="rightCustomeraddress" aria-describedby="rightCustomeraddresseth">
+			  <input type="text" class="form-control" id="secondCustomeraddress" aria-describedby="secondCustomeraddresseth">
 			</div>
-			<button type="button" class="btn btn-secondary btn-lg btn-block" id="RightCustomerSetAddress">Set Carols address</button>
+			<button type="button" class="btn btn-secondary btn-lg btn-block" id="secondCustomerSetAddress">Set Carols address</button>
 						
 			
 		  </div>
@@ -103,7 +115,9 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-	
+
+
+
 	   <!-- Optional JavaScript -->
 	<script src="./js/web3.js"></script>
 	<script src="./js/SplitterCompiled.js"></script>

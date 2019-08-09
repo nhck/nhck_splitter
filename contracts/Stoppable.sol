@@ -3,20 +3,29 @@ pragma solidity 0.5.8;
 import './Owned.sol';
 
 contract Stoppable is Owned {
-    bool isRunning;
+    bool private isRunning;
     event LogPausedcontract(address indexed sender);
     event LogResumedcontract(address indexed sender);
    
-     modifier onlyifRunning {
+     modifier onlyIfRunning {
         require(isRunning);
         _;
     }
     
-    constructor() public {
-        isRunning = true; 
+     modifier onlyIfPaused {
+        require(!isRunning);
+        _;
     }
     
-    function pauseContract() public onlyOwner onlyifRunning returns(bool success) {
+    /**
+     * 
+     * @param startRunning true to start the contract in running mode, false to start stopped
+     */
+    constructor(bool startRunning) public {
+        isRunning = startRunning; 
+    }
+    
+    function pauseContract() public onlyOwner onlyIfRunning returns(bool success) {
         isRunning = false;
         emit LogPausedcontract(msg.sender);
         return true;

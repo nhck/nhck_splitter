@@ -2,6 +2,39 @@ const SplitterCompiled =
 {"contracts":
 {"abi":[
     {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balances",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "secondCustomer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [],
       "name": "pauseContract",
@@ -16,10 +49,24 @@ const SplitterCompiled =
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "getOwner",
+      "outputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [
         {
-          "name": "newOnwer",
+          "name": "newOwner",
           "type": "address"
         }
       ],
@@ -32,6 +79,20 @@ const SplitterCompiled =
       ],
       "payable": false,
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "firstCustomer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -53,23 +114,6 @@ const SplitterCompiled =
       "inputs": [
         {
           "indexed": true,
-          "name": "_from",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "_value",
-          "type": "uint256"
-        }
-      ],
-      "name": "LogFundsAdded",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
           "name": "_by",
           "type": "address"
         },
@@ -84,7 +128,7 @@ const SplitterCompiled =
           "type": "string"
         }
       ],
-      "name": "LogCustomerSet",
+      "name": "logCustomerSet",
       "type": "event"
     },
     {
@@ -102,16 +146,16 @@ const SplitterCompiled =
         },
         {
           "indexed": true,
-          "name": "_left",
+          "name": "_firstCustomer",
           "type": "address"
         },
         {
           "indexed": true,
-          "name": "_right",
+          "name": "_secondCustomer",
           "type": "address"
         }
       ],
-      "name": "LogFundsSplit",
+      "name": "logFundsSplit",
       "type": "event"
     },
     {
@@ -128,19 +172,7 @@ const SplitterCompiled =
           "type": "uint256"
         }
       ],
-      "name": "LogFundsWithdrawn",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "name": "_by",
-          "type": "address"
-        }
-      ],
-      "name": "LogFundsReturned",
+      "name": "logFundsWithdrawn",
       "type": "event"
     },
     {
@@ -190,92 +222,13 @@ const SplitterCompiled =
         {
           "name": "_newCustomer",
           "type": "address"
-        }
-      ],
-      "name": "LeftCustomer",
-      "outputs": [
-        {
-          "name": "success",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_newCustomer",
-          "type": "address"
-        }
-      ],
-      "name": "RightCustomer",
-      "outputs": [
-        {
-          "name": "success",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "LeftCustomerGet",
-      "outputs": [
-        {
-          "name": "_leftCustomerId",
-          "type": "address"
         },
         {
-          "name": "_leftCustomerAmmount",
-          "type": "uint256"
+          "name": "_which",
+          "type": "bool"
         }
       ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "RightCustomerGet",
-      "outputs": [
-        {
-          "name": "_RightCustomerId",
-          "type": "address"
-        },
-        {
-          "name": "_RightCustomerAmmount",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "LocalBalanceGet",
-      "outputs": [
-        {
-          "name": "_localbalance",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "Split",
+      "name": "setCustomer",
       "outputs": [
         {
           "name": "success",
@@ -289,7 +242,7 @@ const SplitterCompiled =
     {
       "constant": false,
       "inputs": [],
-      "name": "AddFunds",
+      "name": "split",
       "outputs": [
         {
           "name": "success",
@@ -303,16 +256,7 @@ const SplitterCompiled =
     {
       "constant": false,
       "inputs": [],
-      "name": "WithdrawFunds",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "ReturnFunds",
+      "name": "withdrawFunds",
       "outputs": [
         {
           "name": "success",

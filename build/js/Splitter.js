@@ -1,41 +1,52 @@
 jQuery(document).ready(function($) {
-    web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
 
-    const SplitterAddress = "0x17a20E63611dB83eCb86Cdea3240B8e23542880C";
+
+
+
+    const web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
+
+    const SplitterAddress = "0xdfaA1E0f272694e60Db5d3450013ec84378Ed441";
     const SplitterContractFactory = web3.eth.contract(SplitterCompiled.contracts.abi);
     const SplitterInstance = SplitterContractFactory.at(SplitterAddress);
 
+    Promise.promisifyAll(web3.eth, {
+        suffix: 'Promise'
+    })
+
     function _splitterInit() {
-        web3.eth.getCoinbase(function(err, coinbase) {
-            if (err) {
-                console.error(err);
-            } else {
+
+        web3.eth.getCoinbasePromise()
+            .then(coinbase => {
+                console.info("Coinbase:", coinbase);
+                console.info("Splitter address:", SplitterAddress);
+
                 $("#coinbasetx").text(coinbase);
                 $("#contractttx").text(SplitterAddress);
 
-                web3.eth.getBalance(coinbase, function(err, balance) {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        $("#coinbasebalance").text((balance));
-                    }
+                return web3.eth.getBalancePromise(coinbase);
+            })
+            .then(balance => {
 
-                });
+                console.info("Coinbase has Ether:", web3.fromWei(balance).toString(10));
+                $("#coinbasebalance").text(balance.toString(10));
 
-                web3.eth.getBalance(SplitterAddress, function(err, balance) {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        $("#balance").text((balance));
-                        _splitterInitCustomers();
-                    }
-                });
-				
-            }
-        });
+                return web3.eth.getBalancePromise(SplitterAddress);
+            })
+            .then(balance => {
+
+                console.info("Splitter contract has Wei:", balance.toString(10));
+                $("#localCustomerbalance").text(balance.toString(10));
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+        _splitterInitCustomers();
     }
 
-    function _splitterInitCustomersBalances(_tx, _balance,_cid) {
+    function _splitterInitCustomersBalances(error, _tx, _cid) {
+        console.info("Setting"  + _cid + " customer address to", _tx);
+
         var _localid = "#" + _cid + "Customer";
 
         $(_localid + "address").val(_tx);
@@ -43,114 +54,116 @@ jQuery(document).ready(function($) {
             $(_localid + "tx").text("n/a").addClass("alert alert-warning");
 
         } else {
-            $(_localid + "tx").text(_tx).removeClass("alert alert-warning");
-            $(_localid + "balance").text((_balance));
+            SplitterInstance.balances.call(_tx, function(error, balance) {
+                if (error) {
+                    console.error(error);
+                    $(_localid + "tx").text("n/a").addClass("alert alert-warning");
+                } else {
+                    $(_localid + "tx").text(_tx).removeClass("alert alert-warning");
+                    $(_localid + "balance").text((balance.toString(10)));
+                }
+            });
         }
     }
 
     function _splitterInitCustomers() {
-        SplitterInstance.LeftCustomerGet.call(function(error, _customer) {
-            if (error) {
-                console.error(error)
-            } else {
-                _splitterInitCustomersBalances(_customer[0], _customer[1], "left")
-            }
+        SplitterInstance.firstCustomer(function(err, _tx) {
+            _splitterInitCustomersBalances(err, _tx, "first")
         });
-        SplitterInstance.RightCustomerGet.call(function(error, _customer) {
-            if (error) {
-                console.error(error)
-            } else {
-                _splitterInitCustomersBalances(_customer[0], _customer[1], "right")
-            }
-        });
-		SplitterInstance.LocalBalanceGet.call(function(error, _balance) {
-            if (error) {
-                console.error(error)
-            } else {
-                _splitterInitCustomersBalances("local", _balance, "local")
-            }
+        SplitterInstance.secondCustomer(function(err, _tx) {
+            _splitterInitCustomersBalances(err, _tx, "second")
         });
     }
 
     function _splitterSetCustomers(event) {
-		var which = event.data.which;
-
-        web3.eth.getCoinbase(function(err, coinbase) {
-            if (err) {
-                console.error(err);
-            } else {
-                web3.eth.getAccounts(function(err, accounts) {
-                    if (err) {
-                        console.error(err);
-                    } else {					
-						var _customertx = $("#"+which+"Customeraddress").val();
-						console.log(_customertx,"tx");
-						if(which == "left") {
-							SplitterInstance.LeftCustomer(_customertx,{ from: coinbase }),function(err, txn) {
-								if (err) {
-                                    console.error(err);
-                                } else {
-                                    console.log("Tried to set splitters txn: ", txn);
-                                    _splitterInit();
-                                }
-							}
-						}
-						if(which == "right") {
-							SplitterInstance.RightCustomer(_customertx,{ from: coinbase }),function(err, txn) {
-								if (err) {
-                                    console.error(err);
-                                } else {
-                                    console.log("Tried to set splitters txn: ", txn);
-                                    _splitterInit();
-                                }
-							}
-						}
-
-                    }
-                });
-            }
-
-        });
-    }
+        var which = event.data.which;
+        var _whichCustomer;
+		console.log(which,"input which ");
 	
-	
-	function _splitterSplits() {
-		console.log("Spliter splits...");
-            web3.eth.getCoinbase(function(err, coinbase) {
-                if (err) {
-                    console.error(err);
-                } else {
-                    web3.eth.getAccounts(function(err, accounts) {
+		
+        if (which == "first") {
+            _whichCustomer = false;
+			console.log("choosing first");
+        } else if (which == "second") {
+			console.log("choosing second");
+            _whichCustomer = true;
+        } else {
+            console.error(which, "which customer");
+            return false;
+        }
+		console.log(_whichCustomer,"_whichCustomer");
+
+        web3.eth.getCoinbasePromise()
+            .then(coinbase => {
+                    let _customertx = $("#" + which + "Customeraddress").val();
+					console.log(_customertx);
+                    SplitterInstance.setCustomer(_customertx, _whichCustomer, {
+                        from: coinbase
+                    }, function(err, txn) {
                         if (err) {
-                            console.error(err);
+                            throw err;
                         } else {
-                            // function Split() onlyOwner onlyifRunning public returns (bool success) {
-
-                            SplitterInstance.Split({
-                                    from: coinbase
-                                },
-                                function(err, txn) {
-                                    if (err) {
-                                        console.error(err);
-                                    } else {
-                                        console.log("Split it: ", txn);
-										_splitterInit();
-										                                        
-                                    }
-                                });
+                            console.info("Tried to set splitters at transaction: ", txn);
+                            _splitterInit();
                         }
                     });
                 }
 
+            )
+            .catch(error => {
+                console.error(error);
             });
 
-	}		
+    }
+
+    function _splitterSplits() {
+        console.log("Spliter splits...");
+        
+		const sendValue = $("#valueWei").val();
+		var coinbase = 0;
+		if(sendValue <= 0) return false;
+		
+		web3.eth.getCoinbasePromise()
+		.then(_coinbase => {
+				coinbase = _coinbase;
+				
+				return web3.eth.getBalancePromise(coinbase);
+		})
+		.then(balance => {
+				console.log(coinbase,"coinbase");
+				console.log(sendValue,"value");
+				if(balance.toNumber()<=0) { throw "balance too low" };
+				SplitterInstance.split({
+										from: coinbase,
+										value: sendValue,
+									},
+									function(err, txn) {
+										if (err) {
+											console.error(err);
+										} else {
+											console.log("Split it: ", txn);
+											_splitterInit();
+																					
+										}
+									});
+		})
+		.catch(function(e){
+			console.error(e);
+		});
+		
+
+    }
 
 
     _splitterInit();
 
-    $("#LeftCustomerSetAddress").on("click", {which: "left"},_splitterSetCustomers);
-	$("#RightCustomerSetAddress").on("click", {which: "right"},_splitterSetCustomers);
-	$("#Ispilt").on("click", _splitterSplits);
+    $("#firstCustomerSetAddress").on("click", {
+        which: "first"
+    }, _splitterSetCustomers);
+    $("#secondCustomerSetAddress").on("click", {
+        which: "second"
+    }, _splitterSetCustomers);
+	
+    $("#Ispilt").on("click", _splitterSplits);
 
 });

@@ -1,81 +1,95 @@
 // This is your test_file.js
-const Splitter = artifacts.require("./Splitter.sol");
+const SplitterLoad = artifacts.require("./Splitter.sol");
+const assert = require("chai").assert;
+const truffleAssert = require('truffle-assertions');
+
 
 contract('Splitter Contract', accounts => {
-    console.log(accounts);
+    const _owner = accounts[0];
+    const _first = accounts[1];
+    const _second = accounts[2];
 
-    var _owner = accounts[0];
-    var _left = accounts[1];
-    var _right = accounts[2];
-
-    var _nonexsting = "0xdd870fa1b7c4700f2bd7f44238821c26f7392148";
-    var _wrongformat = "0x1111";
-
-    // Your unit tests come here
-
-    it("should add LeftCustomer", done => {
-        let instance;
-
-        Splitter.deployed()
-            .then(_instance => {
-                instance = _instance;
-                return instance.LeftCustomer.call(_left, {
-                    from: _owner
-                });
-            })
-            .then(success => {
-                assert.isTrue(success, "failed to add LeftCustomer	");
-                return instance.LeftCustomer(_left, {
-                    from: _owner
-                });
-            })
-            .then(txInfo => {
-                assert.strictEqual(txInfo.logs.length, 1, "Should emit only one event.");
-                return instance.LeftCustomerGet();
-            })
-            .then(_LeftCustomerGet => {
-                assert(_LeftCustomerGet._leftCustomerId == _left, "Customer not set in the array.");
-                done();
-            }) // Test passed
-            .catch(done);
-    });
-
-    it("should add RightCustomer", done => {
-        let instance;
-
-        Splitter.deployed()
-            .then(_instance => {
-                instance = _instance;
-                return instance.RightCustomer.call(_right, {
-                    from: _owner
-                });
-            })
-            .then(success => {
-                assert.isTrue(success, "failed to add RightCustomer	");
-                return instance.RightCustomer(_right, {
-                    from: _owner
-                });
-            })
-            .then(txInfo => {
-                assert.strictEqual(txInfo.logs.length, 1, "Should emit only one event.");
-                return instance.RightCustomerGet();
-            })
-            .then(_RightCustomerGet => {
-                assert(_RightCustomerGet._rightCustomerId == _right, "Customer not set in the array.");
-                done();
-            }) // Test passed
-            .catch(done);
-    });
+	let Splitter; //SplitterInstance
 
 
+	beforeEach('setup contract for each test', async function () {
+       Splitter = await SplitterLoad.new({from:_owner});
+    })
+
+  
+	it("should have an owner", async function () {
+        assert.equal(await Splitter.getOwner(), _owner);
+	});
+	
+	it("should be able to set customers", async function () {
+	
+		await Splitter.setCustomer(_first, false, {from: _owner});
+		await Splitter.setCustomer(_second, true, {from: _owner});
+	
+		assert.equal(await Splitter.firstCustomer(), _first);
+		assert.equal(await Splitter.secondCustomer(), _second);
+		
+	});
+	
+	
+	it("should fail on an malformed addresses", async function () {
+		let _malade = "0x01111";
+		await truffleAssert.fails(Splitter.setCustomer(_malade,false, {from: _owner}));
+	});
+	it("should not split uneven values", async function () {
+			let _ammount = 5;
+		
+			await Splitter.setCustomer(_first, false, {from: _owner});
+			await Splitter.setCustomer(_second, true, {from: _owner});
+			
+			await truffleAssert.reverts(
+				Splitter.split({from: _owner, value:_ammount}),
+				"Ammount not splittable."
+			);
+	});
+	
+	it("should split even values", async function () {
+			let _ammount = 10;
+			let _halfammount = 5;
+			
+			await Splitter.setCustomer(_first, false, {from: _owner});
+			await Splitter.setCustomer(_second, true, {from: _owner});
+			
+			await truffleAssert.passes(await Splitter.split({from: _owner, value:_ammount}));
+			
+			assert.equal(await web3.eth.getBalance(Splitter.address), _ammount);
+			assert.equal(await Splitter.balances.call(_first), _halfammount);
+			assert.equal(await Splitter.balances.call(_second), _halfammount);
+	});
+	
+	it("should allow withdrawal", async function () {
+			let _ammount = 10;
+			let _halfammount = 5;
+			
+			let _firstCustomerBalanceBeforeSplit = await web3.eth.getBalance(_first);
+			let _firstCustomerBalanceAfterSplit = _firstCustomerBalanceBeforeSplit + _halfammount;
+			
+			
+			await Splitter.setCustomer(_first, false, {from: _owner});
+			await Splitter.setCustomer(_second, true, {from: _owner});
+			
+			await Splitter.split({from: _owner, value:_ammount});
+			
+			await truffleAssert.passes(Splitter.withdrawFunds({from:_first}));
+			
+			
+			assert.equal(await Splitter.balances.call(_first), 0); //balance of first customer should be 0
+			assert.equal(await Splitter.balances.call(_second), _halfammount); //second customer should keep his half ammount
+			assert.equal(await web3.eth.getBalance(Splitter.address), _halfammount); //splitter contract should only have half
+			
+	});
+	
+	it("should allow withdrawal only if you have a split balance", async function () {		
+			await truffleAssert.reverts(
+				Splitter.withdrawFunds({from:_first})
+				)
+	});
+	
 
 });
-
-/*
-
-//Splitter.deployed().then(_instance => { instance = _instance; instance.LeftCustomer("0xc4079d539a6378d01fffb2ac75280c1365859d5f", { from: "0xb9f4a71c2ca1cfbfdcf3fceb09ca2f86be2da83e" });return instance.LeftCustomerGet()}).then(id,ammount => {console.log(id,"id");});
-//web3.eth.getAccounts(function(err,res) { accounts = res; });
-//Splitter.deployed().then(_instance => { instance = _instance; instance.AddFunds({ from: "0xb9f4a71c2ca1cfbfdcf3fceb09ca2f86be2da83e",value:12 })});
-//Splitter.deployed().then(_instance => { instance = _instance; return instance.WithdrawFunds({ from: accounts[2]})}).then(console.log);
-//0x17a20E63611dB83eCb86Cdea3240B8e23542880C
-*/
+//personal.unlockAccount(eth.accounts[0],"Xcool3232");personal.unlockAccount(eth.accounts[1],"Xcool32");personal.unlockAccount(eth.accounts[2],"Xcool32");
