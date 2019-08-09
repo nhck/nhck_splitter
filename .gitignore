@@ -1,1 +1,3 @@
-.pem
+*.pem
+*.json
+node_modules/
