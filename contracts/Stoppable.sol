@@ -4,8 +4,8 @@ import './Owned.sol';
 
 contract Stoppable is Owned {
 	bool private isRunning;
-	event logPausedcontract(address indexed sender);
-	event logResumedcontract(address indexed sender);
+	event LogPausedContract(address indexed sender);
+	event LogResumedContract(address indexed sender);
 
 	 modifier onlyIfRunning {
 		require(isRunning);
@@ -27,14 +27,13 @@ contract Stoppable is Owned {
 	
 	function pauseContract() public onlyOwner onlyIfRunning returns(bool success) {
 		isRunning = false;
-		emit logPausedcontract(msg.sender);
+		emit LogPausedContract(msg.sender);
 		return true;
 	}
 	
 	function resumeContract() public onlyOwner onlyIfPaused returns(bool success) {
-		require(!isRunning);
 		isRunning = true;
-		emit logResumedcontract(msg.sender);
+		emit LogResumedContract(msg.sender);
 		return true;
 	}
 }

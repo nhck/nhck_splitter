@@ -6,7 +6,7 @@ import './Stoppable.sol';
 /**
  * @title Splitting of Alice' ethereum for the Blockstars course. 
  */
-contract Splitter is Stoppable(true) {
+contract Splitter is Stoppable {
     using SafeMath for uint;
 
     event LogCustomerSet(address indexed sender, address indexed newCustomer, bool isSecond);
@@ -20,6 +20,12 @@ contract Splitter is Stoppable(true) {
     address public secondCustomer;
 
     /**
+	 *
+	 * @param startRunning true to start the contract in running mode, false to start stopped
+	 */
+    constructor(bool startRunning)  Stoppable(startRunning) public {}
+
+    /**
      * Add/Update
      *
      * @param _newCustomer new Customer address
@@ -31,10 +37,10 @@ contract Splitter is Stoppable(true) {
 
         if (!isSecond) {
             firstCustomer = _newCustomer;
-            emit LogCustomerSet(msg.sender, firstCustomer, isSecond);
+            emit LogCustomerSet(msg.sender, _newCustomer, isSecond);
         } else {
             secondCustomer = _newCustomer;
-            emit LogCustomerSet(msg.sender, secondCustomer, isSecond);
+            emit LogCustomerSet(msg.sender, _newCustomer, isSecond);
         }
 
         return true;
@@ -51,11 +57,7 @@ contract Splitter is Stoppable(true) {
         //Test if splitters are actually set
         require(firstCustomer != address(0) && secondCustomer != address(0), "Both customers have to be set.");
         require(msg.value > 0);
-
-        // If there is a remainder then we reduce the ammount by one Wei
-        if (msg.value.mod(2) == 1) {
-            revert("Ammount not splittable.");
-        }
+        require(msg.value.mod(2) == 0, "Ammount not splittable.");
 
         balances[firstCustomer] = balances[firstCustomer].add(msg.value.div(2));
         balances[secondCustomer] = balances[secondCustomer].add(msg.value.div(2));

@@ -3,7 +3,7 @@ pragma solidity 0.5.8;
 contract Owned {
 	address private _owner;
 	 
-	event LogChangeOwner(address indexed sender, address indexed newOnwer);
+	event LogOwnerChanged(address indexed sender, address indexed newOwner);
 
 	modifier onlyOwner {
 		require(msg.sender == _owner, "You are not the owner of this contract.");
@@ -20,7 +20,7 @@ contract Owned {
 		require(newOwner != address(0),"Invalid address for new Onwer");
 	
 		_owner = newOwner;
-		emit LogChangeOwner(msg.sender, newOwner);
+		emit LogOwnerChanged(msg.sender, newOwner);
 		
 		return true;
 	}
