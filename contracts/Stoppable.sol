@@ -1,14 +1,18 @@
 pragma solidity 0.5.8;
 
 import './Owned.sol';
+import "./Migrations.sol";
 
 contract Stoppable is Owned {
     bool private isRunning;
     bool private isKill;
+    bool private isEOL;
 
     event LogPausedContract(address indexed sender);
     event LogResumedContract(address indexed sender);
     event LogKilledContract(address indexed sender);
+    event LogInitializedEndOfLifeOfContract(address indexed sender);
+    event LogEndedEndOfLifeOfContract(address indexed sender);
 
     modifier onlyIfRunning {
         require(isRunning);
@@ -22,6 +26,11 @@ contract Stoppable is Owned {
 
     modifier onlyIfAlive {
         require(!isKill);
+        _;
+    }
+
+    modifier beyondEndOfLifeOrOnlyIfRunning {
+        require(isEOL || isRunning);
         _;
     }
 
@@ -45,11 +54,23 @@ contract Stoppable is Owned {
         return true;
     }
 
-    function killContract() public onlyOwner onlyIfRunning returns (bool success) {
+    function killContract() public onlyOwner onlyIfPaused returns (bool success) {
         isKill = true;
-        isRunning = false;
-        emit LogPausedContract(msg.sender);
         emit LogKilledContract(msg.sender);
+        return true;
+    }
+
+    function initEndOfLifeContract() public onlyOwner onlyIfAlive onlyIfPaused returns (bool success) {
+        isEOL = true;
+
+        emit LogInitializedEndOfLifeOfContract(msg.sender);
+        return true;
+    }
+
+    function endEndOfLifeContract() public onlyOwner onlyIfAlive onlyIfPaused returns (bool success) {
+        isEOL = false;
+
+        emit LogEndedEndOfLifeOfContract(msg.sender);
         return true;
     }
 }

@@ -22,33 +22,34 @@ contract('Splitter Contract', accounts => {
         )
     });
     it("should require two proper addresses to split", async function () {
-        let _amount  = new BN(5);
+        let amount = new BN(5);
         await truffleAssert.fails(
-            splitter.split(first, "0x1234", {from: owner, value: _amount})
+            splitter.split(first, "0x1234", {from: owner, value: amount})
         )
     });
     it("should require value to be send in to split", async function () {
-        let _amount  = new BN(0);
+        let amount = new BN(0);
         await truffleAssert.reverts(
-            splitter.split(first, second, {from: owner, value: _amount})
+            splitter.split(first, second, {from: owner, value: amount})
         )
     });
 
     describe("testing the splitting", function () {
 
-        let _amount;
-        let _halfAmount;
-        let _modAmount;
-        let splitResult;
+        let amount;
+        let halfAmount;
+        let modAmount;
+        let splitReceipt;
         let firstAddressBalanceBefore;
 
         beforeEach('split the value', async function () {
-            _amount = new BN(11);
-            _halfAmount = _amount.div(new BN(2));
-            _modAmount = _amount.mod(new BN(2));
+            amount = new BN(11);
+            halfAmount = new BN(5);
+            modAmount = new BN(1);
             firstAddressBalanceBefore = new BN(await web3.eth.getBalance(first));
 
-            splitResult = await splitter.split(first, second, {from: owner, value: _amount});
+            splitReceipt = await splitter.split(first, second, {from: owner, value: amount});
+
         });
 
         it("should split values", async function () {
@@ -56,47 +57,57 @@ contract('Splitter Contract', accounts => {
             let splitSecondBalance = new BN(await splitter.balances.call(second));
             let splitSenderBalance = new BN(await splitter.balances.call(owner));
 
-            assert.isTrue(_amount.eq(new BN(await web3.eth.getBalance(splitter.address))));
-            assert.isTrue(_halfAmount.eq(splitFirstBalance));
-            assert.isTrue(_halfAmount.eq(splitSecondBalance));
-            assert.isTrue(_modAmount.eq(splitSenderBalance));
+            assert.strictEqual("11", new BN(await web3.eth.getBalance(splitter.address)).toString());
+            assert.strictEqual("5", splitFirstBalance.toString(), "Half amount should be added to the first Customers balance.");
+            assert.strictEqual("5", splitSecondBalance.toString(), "Half amount should be added to the first Customers balance.");
+            assert.strictEqual("1", splitSenderBalance.toString(), "The remainder amount should be added to the senders balance.");
 
-            await truffleAssert.eventEmitted(splitResult, "LogFundsSplit", (ev) => {
-                return ev.sender === owner && _halfAmount.eq(ev.valuePerCustomer) && ev.firstCustomer === first && ev.secondCustomer === second;
+
+            assert.strictEqual(splitReceipt.logs.length, 1, "Only one event is allowed in this transaction.");
+
+            await truffleAssert.eventEmitted(splitReceipt, "LogFundsSplit", (ev) => {
+                return ev.sender === owner && halfAmount.eq(ev.valuePerCustomer) && ev.firstCustomer === first && ev.secondCustomer === second;
             });
-            await truffleAssert.eventEmitted(splitResult, "LogBalanceUpdated", (ev) => {
-                return ev.customer === first && ev.newBalance.eq(splitFirstBalance);
-            });
-            await truffleAssert.eventEmitted(splitResult, "LogBalanceUpdated", (ev) => {
-                return ev.customer === second && ev.newBalance.eq(splitSecondBalance);
-            });
-            await truffleAssert.eventEmitted(splitResult, "LogBalanceUpdated", (ev) => {
-                return ev.customer === owner && ev.newBalance.eq(splitSenderBalance);
-            });
-        });
-
-        it("should allow withdrawal", async function () {
-            let withdrawResult = await splitter.withdrawFunds({from: first});
-            let withdrawTransaction = await web3.eth.getTransaction(withdrawResult.tx);
-
-            let withdrawfirstBalance = new BN(await splitter.balances.call(first));
-            let withdrawsecondBalance = new BN(await splitter.balances.call(second));
-
-            await truffleAssert.eventEmitted(withdrawResult, "LogFundsWithdrawn", (ev) => {
-                return ev.sender === first && (_halfAmount).eq(ev.value);
-            });
-
-            assert.isTrue(withdrawfirstBalance.isZero(),"Balance of first customer should be 0");
-            assert.isTrue(withdrawsecondBalance.eq(_halfAmount),"Second customer should keep his half amount");
-            assert.isTrue(new BN(await web3.eth.getBalance(splitter.address)).eq(_halfAmount.add(_modAmount)),"Splitter contract should have half amount plus the remainder of the uneven Split"); //splitter contract should only have half
-
-
-            let transactionFee = new BN(withdrawResult.receipt.gasUsed).mul(new BN(withdrawTransaction.gasPrice));
-            let firstAddressBalanceAfter = new BN(await web3.eth.getBalance(first));
-
-            assert.isTrue(firstAddressBalanceBefore.add(_halfAmount).sub(transactionFee).eq(firstAddressBalanceAfter),"Balance of first customer should be the original balance plus the half amount minus the transaction fee.");
 
         });
+        describe("testing EOL", function () {
+            beforeEach("initialize EOL", async function () {
+               await splitter.pauseContract();
+                await splitter.initEndOfLifeContract();
+               });
+            it("should not allow to split values", async function () {
+                await truffleAssert.reverts(
+                    splitter.split(first, second, {from: owner, value: 10}))
+            });
+            it("should allow withdrawal", async function () {
+                let withdrawReceipt = await splitter.withdrawFunds({from: first});
+                let withdrawTransaction = await web3.eth.getTransaction(withdrawReceipt.tx);
+
+                let withdrawfirstBalance = new BN(await splitter.balances.call(first));
+                let withdrawsecondBalance = new BN(await splitter.balances.call(second));
+
+
+               assert.strictEqual(withdrawReceipt.logs.length, 1, "Only one event is allowed in this transaction.");
+                await truffleAssert.eventEmitted(withdrawReceipt, "LogFundsWithdrawn", (ev) => {
+                    return ev.sender === first && (halfAmount).eq(ev.value);
+                });
+
+                assert.strictEqual("0", withdrawfirstBalance.toString(), "Balance of first customer should be 0");
+                assert.strictEqual("5", withdrawsecondBalance.toString(), "Second customer should keep his half amount");
+                assert.strictEqual("6", new BN(await web3.eth.getBalance(splitter.address)).toString(), "Splitter contract should have half amount plus the remainder of the uneven Split"); //splitter contract should only have half
+
+
+                let transactionFee = new BN(withdrawReceipt.receipt.gasUsed).mul(new BN(withdrawTransaction.gasPrice));
+                let firstAddressBalanceAfter = new BN(await web3.eth.getBalance(first));
+
+                assert.strictEqual(firstAddressBalanceBefore.add(halfAmount).sub(transactionFee).toString(), firstAddressBalanceAfter.toString(), "Balance of first customer should be the original balance plus the half amount minus the transaction fee.");
+
+            });
+
+        });
+
+
     });
+
 
 });
