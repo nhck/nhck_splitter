@@ -31,7 +31,11 @@ contract Splitter is Stoppable {
     function split(address firstCustomer, address secondCustomer) onlyIfRunning public payable returns (bool success) {
         require(firstCustomer != address(0) && secondCustomer != address(0), "Both customers have to be set.");
         require(msg.value > 0);
-        require(msg.value.mod(2) == 0, "Amount not splittable.");
+
+        if(msg.value.mod(2) == 1) {
+            balances[msg.sender] = balances[msg.sender].add(1);
+            emit LogBalanceUpdated(msg.sender,balances[msg.sender]);
+        }
 
         balances[firstCustomer] = balances[firstCustomer].add(msg.value.div(2));
         balances[secondCustomer] = balances[secondCustomer].add(msg.value.div(2));
